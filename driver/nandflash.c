@@ -62,6 +62,8 @@ static struct nand_chip nand_ids[] = {
 	{0x2cdc, 0x800, 0x40000, 0x1000, 0xe0, 0x0},
 	/* Mircon MT29H8G08ACAH1 1GB */
 	{0x2c38, 0x800, 0x80000, 0x1000, 0xe0, 0x0},
+  /* ESMT F59L1G81LA 128MB */
+  {0xc8d1, 0x400, 0x20000, 0x800, 0x40, 0x0},
 #ifndef CONFIG_AT91SAM9260EK
 	/* Hynix HY27UF082G2A 256MB */
 	{0xadda, 0x800, 0x20000, 0x800, 0x40, 0x0},
@@ -604,14 +606,15 @@ static int nandflash_get_type(struct nand_info *nand)
 	/* Check if the Nandflash is ONFI compliant */
 	ret = nandflash_detect_onfi(chip);
 	if (ret == -1) {
+	  dbg_info("NAND: ONFI detect failure!\n");
 		if (nandflash_detect_non_onfi(chip)) {
-			dbg_info("NAND: Not find support device!\n");
+			dbg_info("NAND: ONFI Not find support device!\n");
 			return -1;
 		}
 	}
 #else
 	if (nandflash_detect_non_onfi(chip)) {
-		dbg_info("NAND: Not find support device!\n");
+		dbg_info("NAND: NONONFI Not find support device!\n");
 		return -1;
 	}
 #endif
@@ -665,8 +668,10 @@ static int nand_read_status(void)
 			break;
 	} while (--timeout);
 
-	if (!timeout)
+	if (!timeout) {
+	  dbg_printf("nand_read_status timeout\n");
 		return -1;
+	}
 
 #ifdef CONFIG_ON_DIE_ECC
 	if (status & STATUS_ERROR) {
@@ -782,6 +787,7 @@ static int nand_read_sector(struct nand_info *nand,
 		break;
 
 	default:
+	  dbg_printf("zone_flag error\n");
 		return -1;
 	}
 
@@ -794,8 +800,10 @@ static int nand_read_sector(struct nand_info *nand,
 
 	nand->command(CMD_READ_2);
 
-	if (nand_read_status())
+	if (nand_read_status()) {
+	  dbg_printf("nand_read_sector::read status error\n");
 		return -1;
+	}
 
 	nand->command(CMD_READ_1);
 
@@ -814,8 +822,9 @@ static int nand_read_sector(struct nand_info *nand,
 			*pbuf++ = read_byte();
 
 #ifdef CONFIG_USE_PMECC
-		if (usepmecc)
+		if (usepmecc) {
 			ret = pmecc_process(nand, buffer);
+		}
 #endif
 	}
 
@@ -996,10 +1005,14 @@ static int nand_loadimage(struct nand_info *nand,
 		for (page = start_page; page < end_page; page++) {
 			ret = nand_read_page(nand, block, page,
 						ZONE_DATA, buffer);
-			if (ret)
+			if (ret) {
+			  dbg_info("NAND: failed read block:" \
+			            " #%x\n", block);
 				return -1;
-			else
+			}
+			else {
 				buffer += nand->pagesize;
+			}
 		}
 		length -= readsize;
 
