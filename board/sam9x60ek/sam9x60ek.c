@@ -81,10 +81,10 @@ static void ddramc_reg_config(struct ddramc_register *ddramc_config)
 				AT91C_DDRC2_MD_DDR2_SDRAM);
 
 	ddramc_config->cr = (AT91C_DDRC2_NC_DDR10_SDR9 |
-				AT91C_DDRC2_NR_14 |
+				AT91C_DDRC2_NR_13 |
 				AT91C_DDRC2_CAS_3 |
 				AT91C_DDRC2_WEAK_STRENGTH_RZQ7 |
-				AT91C_DDRC2_NB_BANKS_8 |
+				AT91C_DDRC2_NB_BANKS_4 |
 				AT91C_DDRC2_DECOD_INTERLEAVED |
 				AT91C_DDRC2_UNAL_SUPPORTED);
 
